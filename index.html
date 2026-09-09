@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>세미콜론 리모트 · Phase 1</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap">
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --paper:#F2EEE6; --ink:#1B1E1A; --green:#1F4A38; --green-lit:#2F7A5B;
+  --apricot:#E39B6A; --mute:#8C8579; --line:#DCD5C8;
+  --stage:#0F1512; --stage-2:#17211C;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:Pretendard,system-ui,sans-serif;
+  background:var(--paper); color:var(--ink);
+  overscroll-behavior:none;
+}
+.mono{font-family:'IBM Plex Mono',monospace}
+button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--green-lit);outline-offset:3px}
+
+/* ---------- 역할 선택 ---------- */
+#pick{min-height:100dvh;display:grid;place-items:center;padding:32px}
+#pick .box{width:min(420px,100%)}
+#pick h1{font-size:26px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
+#pick p{color:var(--mute);font-size:14px;line-height:1.6;margin-bottom:28px}
+.role{
+  display:block;width:100%;text-align:left;padding:18px 20px;
+  border:1px solid var(--line);border-radius:14px;background:#fff;margin-bottom:10px;
+}
+.role b{display:block;font-size:16px;font-weight:600;margin-bottom:3px}
+.role span{font-size:13px;color:var(--mute)}
+.role:hover{border-color:var(--green)}
+
+/* ---------- PC 화면 ---------- */
+#pc{position:fixed;inset:0;background:var(--stage);display:none;color:#EDEBE4}
+#stage{position:absolute;inset:0;width:100%;height:100%;display:block}
+#panel{
+  position:absolute;top:24px;left:24px;
+  background:rgba(15,21,18,.82);border:1px solid rgba(237,235,228,.14);
+  border-radius:16px;padding:20px;width:280px;backdrop-filter:blur(8px);
+}
+#panel h2{font-size:13px;font-weight:600;color:#9FB3A8;margin-bottom:14px}
+#code{
+  font-family:'IBM Plex Mono',monospace;font-size:40px;font-weight:600;
+  letter-spacing:.14em;color:var(--apricot);line-height:1;margin-bottom:16px;
+}
+#qr{background:#fff;padding:10px;border-radius:10px;width:fit-content;margin-bottom:14px}
+#qr img,#qr canvas{display:block}
+#url{font-size:11px;color:#7F8F86;word-break:break-all;line-height:1.5;margin-bottom:16px}
+.stat{display:flex;justify-content:space-between;font-size:13px;padding:5px 0}
+.stat span:first-child{color:#7F8F86}
+.stat span:last-child{font-family:'IBM Plex Mono',monospace}
+#dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#C4553F;margin-right:7px;vertical-align:1px}
+#dot.on{background:var(--green-lit)}
+#hint{
+  position:absolute;bottom:28px;left:50%;transform:translateX(-50%);
+  font-size:14px;color:#6E7D74;text-align:center;line-height:1.7;
+}
+kbd{font-family:'IBM Plex Mono',monospace;background:rgba(237,235,228,.1);
+  padding:2px 6px;border-radius:5px;font-size:12px}
+
+/* ---------- 폰 컨트롤러 ---------- */
+#remote{display:none;min-height:100dvh;flex-direction:column;
+  touch-action:none;user-select:none;-webkit-user-select:none}
+#rjoin{padding:40px 28px;display:flex;flex-direction:column;gap:14px;min-height:100dvh;justify-content:center}
+#rjoin h1{font-size:22px;font-weight:700;letter-spacing:-.02em}
+#rjoin p{font-size:14px;color:var(--mute);line-height:1.6}
+#codein{
+  font-family:'IBM Plex Mono',monospace;font-size:30px;letter-spacing:.2em;text-align:center;
+  padding:16px;border:1px solid var(--line);border-radius:12px;background:#fff;
+  text-transform:uppercase;width:100%;
+}
+.cta{
+  background:var(--green);color:#F4F1E9;padding:17px;border-radius:12px;
+  font-size:16px;font-weight:600;text-align:center;width:100%;
+}
+.cta:active{background:var(--green-lit)}
+#rerr{font-size:13px;color:#B4472F;min-height:18px}
+
+#rpad{display:none;flex:1;flex-direction:column;padding:16px;gap:14px}
+#rtop{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--mute)}
+#rtop .mono{font-size:12px}
+#aim{
+  flex:1;border:1px solid var(--line);border-radius:18px;background:#fff;
+  display:grid;place-items:center;text-align:center;padding:24px;
+}
+#aim .big{font-size:17px;font-weight:600;margin-bottom:8px}
+#aim .sub{font-size:13px;color:var(--mute);line-height:1.6}
+#btnCal{
+  background:var(--apricot);color:#2A1A10;padding:20px;border-radius:14px;
+  font-size:17px;font-weight:600;width:100%;
+}
+#btnCal:active{filter:brightness(.94)}
+.abrow{display:flex;gap:12px}
+.ab{
+  flex:1;aspect-ratio:1.9;border-radius:16px;font-size:26px;font-weight:600;
+  font-family:'IBM Plex Mono',monospace;display:grid;place-items:center;
+}
+#btnA{background:var(--green);color:#F4F1E9}
+#btnB{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.ab:active{transform:scale(.97)}
+</style>
+</head>
+<body>
+
+<!-- 역할 선택 -->
+<section id="pick">
+  <div class="box">
+    <h1>세미콜론 리모트</h1>
+    <p>폰을 컨트롤러로, 큰 화면을 게임 화면으로 씁니다.<br>기기마다 아래에서 역할을 고르세요.</p>
+    <button class="role" data-role="pc">
+      <b>이 기기를 게임 화면으로</b>
+      <span>노트북·모니터에서 선택. 방 코드가 나옵니다.</span>
+    </button>
+    <button class="role" data-role="remote">
+      <b>이 기기를 컨트롤러로</b>
+      <span>폰에서 선택. 방 코드를 입력해 연결합니다.</span>
+    </button>
+  </div>
+</section>
+
+<!-- PC 화면 -->
+<section id="pc">
+  <canvas id="stage"></canvas>
+  <div id="panel">
+    <h2><span id="dot"></span><span id="state">컨트롤러 기다리는 중</span></h2>
+    <div id="code" class="mono">----</div>
+    <div id="qr"></div>
+    <div id="url"></div>
+    <div class="stat"><span>지연</span><span id="ping">—</span></div>
+    <div class="stat"><span>전송</span><span id="rate">—</span></div>
+  </div>
+  <div id="hint">화면 가운데를 겨누고 폰의 <b>조준 맞추기</b>를 누르세요<br>
+    <kbd>C</kbd> 조준 초기화 · <kbd>H</kbd> 패널 숨기기</div>
+</section>
+
+<!-- 폰 컨트롤러 -->
+<section id="remote">
+  <div id="rjoin">
+    <h1>컨트롤러 연결</h1>
+    <p>큰 화면에 표시된 네 글자 코드를 입력하세요.</p>
+    <input id="codein" class="mono" maxlength="4" autocomplete="off" autocapitalize="characters" placeholder="CODE">
+    <button class="cta" id="btnJoin">연결하기</button>
+    <div id="rerr"></div>
+  </div>
+
+  <div id="rpad">
+    <div id="rtop">
+      <span id="rstate">연결됨</span>
+      <span class="mono" id="rcode"></span>
+    </div>
+    <div id="aim">
+      <div>
+        <div class="big">화면 가운데를 겨누세요</div>
+        <div class="sub">폰 윗부분이 화면을 향하게 들고<br>아래 버튼을 누르면 조준이 맞춰집니다.</div>
+      </div>
+    </div>
+    <button id="btnCal">조준 맞추기</button>
+    <div class="abrow">
+      <button class="ab" id="btnA">A</button>
+      <button class="ab" id="btnB">B</button>
+    </div>
+  </div>
+</section>
+
+<script>
+const P = new URLSearchParams(location.search);
+const PREFIX = 'smcln-wii-';
+const $ = s => document.querySelector(s);
+
+// 역할 결정: ?role= 우선, 없으면 선택 화면
+const role = P.get('role');
+if (role === 'pc') startPC();
+else if (role === 'remote') startRemote();
+else {
+  document.querySelectorAll('.role').forEach(b => b.onclick = () => {
+    P.set('role', b.dataset.role);
+    location.search = P.toString();
+  });
+}
+
+function show(id){ $('#pick').style.display='none'; const e=$(id);
+  e.style.display = (id === '#remote') ? 'flex' : 'block'; }
+
+/* =========================================================
+   게임 화면 (PC)
+   ========================================================= */
+function startPC(){
+  show('#pc');
+  const code = (P.get('code') || randCode()).toUpperCase();
+  $('#code').textContent = code;
+  $('#rcode');
+
+  const joinURL = location.origin + location.pathname + '?role=remote&code=' + code;
+  $('#url').textContent = joinURL;
+  new QRCode($('#qr'), { text: joinURL, width: 132, height: 132, correctLevel: QRCode.CorrectLevel.M });
+
+  // ---- 커서 상태 ----
+  const cv = $('#stage'), ctx = cv.getContext('2d');
+  let W=0, H=0, DPR=1;
+  function resize(){
+    DPR = Math.min(devicePixelRatio||1, 2);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = W*DPR; cv.height = H*DPR;
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  addEventListener('resize', resize); resize();
+
+  let ref = null;                    // 보정 기준 {a,b}
+  let raw = {x:W/2, y:H/2};          // 목표 좌표
+  let cur = {x:W/2, y:H/2};          // 보간된 좌표
+  let trail = [];
+  let pressA = 0, pressB = 0;
+  let hits = [];
+  let msgCount = 0, lastRate = performance.now();
+
+  const DEG_X = 40;   // 가로 전체를 덮는 좌우 회전 각도
+  const DEG_Y = 26;   // 세로 전체를 덮는 상하 각도
+
+  function applyOrientation(o){
+    if (!ref) return;
+    let dA = ((o.a - ref.a + 540) % 360) - 180;   // yaw (오른쪽으로 돌리면 감소)
+    let dB = o.b - ref.b;                          // pitch (위로 들면 증가)
+    raw.x = W/2 - dA * (W / DEG_X);
+    raw.y = H/2 - dB * (H / DEG_Y);
+    raw.x = Math.max(0, Math.min(W, raw.x));
+    raw.y = Math.max(0, Math.min(H, raw.y));
+  }
+
+  function draw(){
+    cur.x += (raw.x - cur.x) * 0.32;
+    cur.y += (raw.y - cur.y) * 0.32;
+
+    ctx.fillStyle = '#0F1512'; ctx.fillRect(0,0,W,H);
+
+    // 조준 격자
+    ctx.strokeStyle = 'rgba(237,235,228,.045)'; ctx.lineWidth = 1;
+    for(let x=0;x<W;x+=64){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    for(let y=0;y<H;y+=64){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+    // 중앙 기준점
+    ctx.strokeStyle = 'rgba(47,122,91,.5)';
+    ctx.beginPath(); ctx.arc(W/2,H/2,7,0,7); ctx.stroke();
+
+    // 잔상
+    trail.push({x:cur.x,y:cur.y,t:performance.now()});
+    trail = trail.filter(p => performance.now()-p.t < 260);
+    ctx.lineWidth = 3; ctx.lineCap='round';
+    for(let i=1;i<trail.length;i++){
+      const a = i/trail.length*0.5;
+      ctx.strokeStyle = 'rgba(227,155,106,'+a.toFixed(3)+')';
+      ctx.beginPath(); ctx.moveTo(trail[i-1].x,trail[i-1].y);
+      ctx.lineTo(trail[i].x,trail[i].y); ctx.stroke();
+    }
+
+    // 명중 표시
+    hits = hits.filter(h => performance.now()-h.t < 520);
+    hits.forEach(h => {
+      const k = (performance.now()-h.t)/520;
+      ctx.strokeStyle = 'rgba(47,122,91,'+(1-k).toFixed(3)+')';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(h.x,h.y,10+k*46,0,7); ctx.stroke();
+    });
+
+    // 커서
+    const held = performance.now()-pressA < 120;
+    ctx.strokeStyle = held ? '#2F7A5B' : '#E39B6A';
+    ctx.lineWidth = held ? 4 : 2.5;
+    ctx.beginPath(); ctx.arc(cur.x,cur.y,held?15:18,0,7); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cur.x-26,cur.y); ctx.lineTo(cur.x-8,cur.y);
+    ctx.moveTo(cur.x+8,cur.y);  ctx.lineTo(cur.x+26,cur.y);
+    ctx.moveTo(cur.x,cur.y-26); ctx.lineTo(cur.x,cur.y-8);
+    ctx.moveTo(cur.x,cur.y+8);  ctx.lineTo(cur.x,cur.y+26);
+    ctx.stroke();
+
+    if (!ref){
+      ctx.fillStyle = 'rgba(237,235,228,.34)';
+      ctx.font = '15px Pretendard, sans-serif'; ctx.textAlign='center';
+      ctx.fillText('조준이 아직 맞춰지지 않았습니다', W/2, H/2+40);
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+
+  addEventListener('keydown', e => {
+    if (e.key==='c'||e.key==='C') { ref=null; }
+    if (e.key==='h'||e.key==='H') {
+      const p=$('#panel'); p.style.display = p.style.display==='none'?'block':'none';
+    }
+  });
+
+  // ---- 연결 ----
+  let conn = null;
+  const peer = new Peer(PREFIX + code, {debug:0});
+  peer.on('error', e => {
+    $('#state').textContent = '연결 오류 — 새로고침하세요';
+    console.warn(e);
+  });
+  peer.on('connection', c => {
+    if (conn && conn.open) conn.close();
+    conn = c;
+    c.on('open', () => {
+      $('#dot').classList.add('on');
+      $('#state').textContent = '컨트롤러 연결됨';
+      pingLoop();
+    });
+    c.on('data', d => {
+      msgCount++;
+      if (d.t === 'o') applyOrientation(d);
+      else if (d.t === 'cal') { ref = {a:d.a, b:d.b}; }
+      else if (d.t === 'btn') {
+        if (d.k === 'A' && d.down) { pressA = performance.now(); hits.push({x:cur.x,y:cur.y,t:performance.now()}); }
+        if (d.k === 'B' && d.down) { pressB = performance.now(); ref = null; }
+      }
+      else if (d.t === 'pong') $('#ping').textContent = (Date.now()-d.ts) + ' ms';
+    });
+    c.on('close', () => {
+      $('#dot').classList.remove('on');
+      $('#state').textContent = '연결 끊김 — 다시 연결하세요';
+    });
+  });
+
+  function pingLoop(){
+    setInterval(() => { if (conn && conn.open) conn.send({t:'ping', ts:Date.now()}); }, 1000);
+  }
+  setInterval(() => {
+    const now = performance.now();
+    const hz = msgCount / ((now-lastRate)/1000);
+    $('#rate').textContent = hz.toFixed(0) + ' /s';
+    msgCount = 0; lastRate = now;
+  }, 1000);
+}
+
+function randCode(){
+  const s='ABCDEFGHJKLMNPQRSTUVWXYZ'; let o='';
+  for(let i=0;i<4;i++) o += s[Math.floor(Math.random()*s.length)];
+  return o;
+}
+
+/* =========================================================
+   컨트롤러 (폰)
+   ========================================================= */
+function startRemote(){
+  show('#remote');
+  const pre = (P.get('code')||'').toUpperCase();
+  if (pre) $('#codein').value = pre;
+
+  $('#btnJoin').onclick = async () => {
+    const code = $('#codein').value.trim().toUpperCase();
+    if (code.length !== 4) { $('#rerr').textContent = '코드는 네 글자입니다.'; return; }
+    $('#rerr').textContent = '';
+
+    // iOS: 사용자 동작 안에서 센서 권한 요청
+    try {
+      if (typeof DeviceOrientationEvent !== 'undefined' &&
+          typeof DeviceOrientationEvent.requestPermission === 'function') {
+        const r = await DeviceOrientationEvent.requestPermission();
+        if (r !== 'granted') { $('#rerr').textContent = '센서 권한이 필요합니다. 설정 > Safari > 동작 및 방향 접근을 켜주세요.'; return; }
+      }
+    } catch(e){ $('#rerr').textContent = '센서 권한 요청에 실패했습니다.'; return; }
+
+    connect(code);
+  };
+
+  let conn = null, last = {a:0,b:0,g:0};
+
+  function connect(code){
+    $('#rerr').textContent = '연결하는 중…';
+    const peer = new Peer({debug:0});
+    peer.on('open', () => {
+      conn = peer.connect(PREFIX + code, {reliable:false});
+      conn.on('open', () => {
+        $('#rjoin').style.display='none';
+        $('#rpad').style.display='flex';
+        $('#rcode').textContent = code;
+        keepAwake();
+        startSensors();
+      });
+      conn.on('data', d => { if (d.t==='ping') conn.send({t:'pong', ts:d.ts}); });
+      conn.on('close', () => {
+        $('#rstate').textContent = '연결 끊김 — 새로고침하세요';
+      });
+      conn.on('error', () => { $('#rerr').textContent = '연결 실패. 코드를 확인하세요.'; });
+    });
+    peer.on('error', e => {
+      $('#rerr').textContent = (e.type==='peer-unavailable')
+        ? '해당 코드의 화면을 찾을 수 없습니다.' : '연결 오류가 발생했습니다.';
+    });
+  }
+
+  function startSensors(){
+    let lastSend = 0;
+    addEventListener('deviceorientation', e => {
+      if (e.alpha == null) return;
+      last = {a:e.alpha, b:e.beta, g:e.gamma};
+      const now = performance.now();
+      if (now - lastSend < 20) return;      // 약 50Hz
+      lastSend = now;
+      if (conn && conn.open) conn.send({t:'o', a:last.a, b:last.b, g:last.g});
+    }, true);
+  }
+
+  const send = o => { if (conn && conn.open) conn.send(o); };
+  $('#btnCal').onclick = () => send({t:'cal', a:last.a, b:last.b});
+  bindBtn($('#btnA'), 'A'); bindBtn($('#btnB'), 'B');
+  function bindBtn(el, k){
+    const down = e => { e.preventDefault(); send({t:'btn', k, down:true}); };
+    const up   = e => { e.preventDefault(); send({t:'btn', k, down:false}); };
+    el.addEventListener('touchstart', down, {passive:false});
+    el.addEventListener('touchend', up, {passive:false});
+    el.addEventListener('mousedown', down);
+    el.addEventListener('mouseup', up);
+  }
+
+  async function keepAwake(){
+    try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch(e){}
+  }
+}
+</script>
+</body>
+</html>
