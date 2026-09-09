@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>세미콜론 리모트 · Phase 1</title>
+<title>세미콜론 리모트</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap">
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -11,122 +11,81 @@
 <style>
 :root{
   --paper:#F2EEE6; --ink:#1B1E1A; --green:#1F4A38; --green-lit:#2F7A5B;
-  --apricot:#E39B6A; --mute:#8C8579; --line:#DCD5C8;
-  --stage:#0F1512; --stage-2:#17211C;
+  --apricot:#E39B6A; --mute:#8C8579; --line:#DCD5C8; --stage:#0F1512;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
-body{
-  font-family:Pretendard,system-ui,sans-serif;
-  background:var(--paper); color:var(--ink);
-  overscroll-behavior:none;
-}
-.mono{font-family:'IBM Plex Mono',monospace}
+body{font-family:Pretendard,system-ui,sans-serif;background:var(--paper);color:var(--ink);overscroll-behavior:none}
 button{font:inherit;color:inherit;border:none;background:none;cursor:pointer}
 :focus-visible{outline:2px solid var(--green-lit);outline-offset:3px}
 
-/* ---------- 역할 선택 ---------- */
 #pick{min-height:100dvh;display:grid;place-items:center;padding:32px}
 #pick .box{width:min(420px,100%)}
 #pick h1{font-size:26px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
 #pick p{color:var(--mute);font-size:14px;line-height:1.6;margin-bottom:28px}
-.role{
-  display:block;width:100%;text-align:left;padding:18px 20px;
-  border:1px solid var(--line);border-radius:14px;background:#fff;margin-bottom:10px;
-}
+.role{display:block;width:100%;text-align:left;padding:18px 20px;border:1px solid var(--line);
+  border-radius:14px;background:#fff;margin-bottom:10px}
 .role b{display:block;font-size:16px;font-weight:600;margin-bottom:3px}
 .role span{font-size:13px;color:var(--mute)}
 .role:hover{border-color:var(--green)}
 
-/* ---------- PC 화면 ---------- */
 #pc{position:fixed;inset:0;background:var(--stage);display:none;color:#EDEBE4}
 #stage{position:absolute;inset:0;width:100%;height:100%;display:block}
-#panel{
-  position:absolute;top:24px;left:24px;
-  background:rgba(15,21,18,.82);border:1px solid rgba(237,235,228,.14);
-  border-radius:16px;padding:20px;width:280px;backdrop-filter:blur(8px);
-}
-#panel h2{font-size:13px;font-weight:600;color:#9FB3A8;margin-bottom:14px}
-#code{
-  font-family:'IBM Plex Mono',monospace;font-size:40px;font-weight:600;
-  letter-spacing:.14em;color:var(--apricot);line-height:1;margin-bottom:16px;
-}
-#qr{background:#fff;padding:10px;border-radius:10px;width:fit-content;margin-bottom:14px}
+#panel{position:absolute;top:22px;left:22px;background:rgba(15,21,18,.84);
+  border:1px solid rgba(237,235,228,.14);border-radius:16px;padding:18px;width:250px;backdrop-filter:blur(8px)}
+#panel h2{font-size:12px;font-weight:600;color:#9FB3A8;margin-bottom:12px}
+#code{font-family:'IBM Plex Mono',monospace;font-size:34px;font-weight:600;letter-spacing:.14em;
+  color:var(--apricot);line-height:1;margin-bottom:14px}
+#qr{background:#fff;padding:9px;border-radius:10px;width:fit-content;margin-bottom:12px}
 #qr img,#qr canvas{display:block}
-#url{font-size:11px;color:#7F8F86;word-break:break-all;line-height:1.5;margin-bottom:16px}
-.stat{display:flex;justify-content:space-between;font-size:13px;padding:5px 0}
+#url{font-size:10px;color:#7F8F86;word-break:break-all;line-height:1.5;margin-bottom:12px}
+.stat{display:flex;justify-content:space-between;font-size:12px;padding:4px 0}
 .stat span:first-child{color:#7F8F86}
 .stat span:last-child{font-family:'IBM Plex Mono',monospace}
 #dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#C4553F;margin-right:7px;vertical-align:1px}
 #dot.on{background:var(--green-lit)}
-#hint{
-  position:absolute;bottom:28px;left:50%;transform:translateX(-50%);
-  font-size:14px;color:#6E7D74;text-align:center;line-height:1.7;
-}
-kbd{font-family:'IBM Plex Mono',monospace;background:rgba(237,235,228,.1);
-  padding:2px 6px;border-radius:5px;font-size:12px}
+#hint{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);font-size:12px;
+  color:#5E6D64;text-align:center}
+kbd{font-family:'IBM Plex Mono',monospace;background:rgba(237,235,228,.1);padding:2px 6px;border-radius:5px;font-size:11px}
 
-/* ---------- 폰 컨트롤러 ---------- */
-#remote{display:none;min-height:100dvh;flex-direction:column;
-  touch-action:none;user-select:none;-webkit-user-select:none}
+#remote{display:none;min-height:100dvh;flex-direction:column;touch-action:none;user-select:none;-webkit-user-select:none}
 #rjoin{padding:40px 28px;display:flex;flex-direction:column;gap:14px;min-height:100dvh;justify-content:center}
 #rjoin h1{font-size:22px;font-weight:700;letter-spacing:-.02em}
 #rjoin p{font-size:14px;color:var(--mute);line-height:1.6}
-#codein{
-  font-family:'IBM Plex Mono',monospace;font-size:30px;letter-spacing:.2em;text-align:center;
-  padding:16px;border:1px solid var(--line);border-radius:12px;background:#fff;
-  text-transform:uppercase;width:100%;
-}
-.cta{
-  background:var(--green);color:#F4F1E9;padding:17px;border-radius:12px;
-  font-size:16px;font-weight:600;text-align:center;width:100%;
-}
+#codein{font-family:'IBM Plex Mono',monospace;font-size:30px;letter-spacing:.2em;text-align:center;
+  padding:16px;border:1px solid var(--line);border-radius:12px;background:#fff;text-transform:uppercase;width:100%}
+.cta{background:var(--green);color:#F4F1E9;padding:17px;border-radius:12px;font-size:16px;font-weight:600;text-align:center;width:100%}
 .cta:active{background:var(--green-lit)}
 #rerr{font-size:13px;color:#B4472F;min-height:18px}
 
-#rpad{display:none;flex:1;flex-direction:column;padding:16px;gap:14px}
+#rpad{display:none;flex:1;flex-direction:column;padding:14px;gap:12px}
 #rtop{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--mute)}
-#rtop .mono{font-size:12px}
-#aim{
-  flex:1;border:1px solid var(--line);border-radius:18px;background:#fff;
-  display:grid;place-items:center;text-align:center;padding:24px;
-}
-#aim .big{font-size:17px;font-weight:600;margin-bottom:8px}
-#aim .sub{font-size:13px;color:var(--mute);line-height:1.6}
-#btnCal{
-  background:var(--apricot);color:#2A1A10;padding:20px;border-radius:14px;
-  font-size:17px;font-weight:600;width:100%;
-}
+#aim{flex:1;border:1px solid var(--line);border-radius:18px;background:#fff;display:grid;place-items:center;
+  text-align:center;padding:20px}
+#aimTitle{font-size:17px;font-weight:600;margin-bottom:8px}
+#aimSub{font-size:13px;color:var(--mute);line-height:1.6}
+#btnCal{background:var(--apricot);color:#2A1A10;padding:18px;border-radius:14px;font-size:16px;font-weight:600;width:100%}
 #btnCal:active{filter:brightness(.94)}
 .abrow{display:flex;gap:12px}
-.ab{
-  flex:1;aspect-ratio:1.9;border-radius:16px;font-size:26px;font-weight:600;
-  font-family:'IBM Plex Mono',monospace;display:grid;place-items:center;
-}
+.ab{flex:1;aspect-ratio:2.1;border-radius:16px;display:grid;place-items:center;
+  font-family:'IBM Plex Mono',monospace;font-size:24px;font-weight:600}
+.ab small{display:block;font-family:Pretendard,sans-serif;font-size:11px;font-weight:500;opacity:.72;margin-top:2px}
 #btnA{background:var(--green);color:#F4F1E9}
-#btnB{background:#fff;border:1px solid var(--line);color:var(--ink)}
+#btnB{background:#fff;border:1px solid var(--line)}
 .ab:active{transform:scale(.97)}
 </style>
 </head>
 <body>
 
-<!-- 역할 선택 -->
 <section id="pick">
   <div class="box">
     <h1>세미콜론 리모트</h1>
     <p>폰을 컨트롤러로, 큰 화면을 게임 화면으로 씁니다.<br>기기마다 아래에서 역할을 고르세요.</p>
-    <button class="role" data-role="pc">
-      <b>이 기기를 게임 화면으로</b>
-      <span>노트북·모니터에서 선택. 방 코드가 나옵니다.</span>
-    </button>
-    <button class="role" data-role="remote">
-      <b>이 기기를 컨트롤러로</b>
-      <span>폰에서 선택. 방 코드를 입력해 연결합니다.</span>
-    </button>
+    <button class="role" data-role="pc"><b>이 기기를 게임 화면으로</b><span>노트북·모니터에서 선택. 방 코드가 나옵니다.</span></button>
+    <button class="role" data-role="remote"><b>이 기기를 컨트롤러로</b><span>폰에서 선택. 방 코드를 입력해 연결합니다.</span></button>
   </div>
 </section>
 
-<!-- PC 화면 -->
 <section id="pc">
   <canvas id="stage"></canvas>
   <div id="panel">
@@ -135,13 +94,10 @@ kbd{font-family:'IBM Plex Mono',monospace;background:rgba(237,235,228,.1);
     <div id="qr"></div>
     <div id="url"></div>
     <div class="stat"><span>지연</span><span id="ping">—</span></div>
-    <div class="stat"><span>전송</span><span id="rate">—</span></div>
   </div>
-  <div id="hint">화면 가운데를 겨누고 폰의 <b>조준 맞추기</b>를 누르세요<br>
-    <kbd>C</kbd> 조준 초기화 · <kbd>H</kbd> 패널 숨기기</div>
+  <div id="hint"><kbd>C</kbd> 조준 초기화 · <kbd>H</kbd> 패널 · <kbd>M</kbd> 메뉴 · 마우스로도 조작됩니다</div>
 </section>
 
-<!-- 폰 컨트롤러 -->
 <section id="remote">
   <div id="rjoin">
     <h1>컨트롤러 연결</h1>
@@ -150,22 +106,16 @@ kbd{font-family:'IBM Plex Mono',monospace;background:rgba(237,235,228,.1);
     <button class="cta" id="btnJoin">연결하기</button>
     <div id="rerr"></div>
   </div>
-
   <div id="rpad">
-    <div id="rtop">
-      <span id="rstate">연결됨</span>
-      <span class="mono" id="rcode"></span>
-    </div>
-    <div id="aim">
-      <div>
-        <div class="big">화면 가운데를 겨누세요</div>
-        <div class="sub">폰 윗부분이 화면을 향하게 들고<br>아래 버튼을 누르면 조준이 맞춰집니다.</div>
-      </div>
-    </div>
+    <div id="rtop"><span id="rstate">연결됨</span><span class="mono" id="rcode"></span></div>
+    <div id="aim"><div>
+      <div id="aimTitle">화면 가운데를 겨누세요</div>
+      <div id="aimSub">폰 윗부분이 화면을 향하게 들고<br>아래 버튼을 누르면 조준이 맞춰집니다.</div>
+    </div></div>
     <button id="btnCal">조준 맞추기</button>
     <div class="abrow">
-      <button class="ab" id="btnA">A</button>
-      <button class="ab" id="btnB">B</button>
+      <button class="ab" id="btnA">A<small>선택 · 발사</small></button>
+      <button class="ab" id="btnB">B<small>뒤로</small></button>
     </div>
   </div>
 </section>
@@ -174,169 +124,546 @@ kbd{font-family:'IBM Plex Mono',monospace;background:rgba(237,235,228,.1);
 const P = new URLSearchParams(location.search);
 const PREFIX = 'smcln-wii-';
 const $ = s => document.querySelector(s);
-
-// 역할 결정: ?role= 우선, 없으면 선택 화면
 const role = P.get('role');
 if (role === 'pc') startPC();
 else if (role === 'remote') startRemote();
-else {
-  document.querySelectorAll('.role').forEach(b => b.onclick = () => {
-    P.set('role', b.dataset.role);
-    location.search = P.toString();
-  });
-}
-
+else document.querySelectorAll('.role').forEach(b => b.onclick = () => {
+  P.set('role', b.dataset.role); location.search = P.toString();
+});
 function show(id){ $('#pick').style.display='none'; const e=$(id);
-  e.style.display = (id === '#remote') ? 'flex' : 'block'; }
+  e.style.display = (id==='#remote') ? 'flex' : 'block'; }
+const rand = (a,b)=>a+Math.random()*(b-a);
+const clamp = (v,a,b)=>v<a?a:v>b?b:v;
 
-/* =========================================================
-   게임 화면 (PC)
-   ========================================================= */
+/* =====================================================================
+   게임 화면
+   ===================================================================== */
 function startPC(){
   show('#pc');
   const code = (P.get('code') || randCode()).toUpperCase();
   $('#code').textContent = code;
-  $('#rcode');
-
   const joinURL = location.origin + location.pathname + '?role=remote&code=' + code;
   $('#url').textContent = joinURL;
-  new QRCode($('#qr'), { text: joinURL, width: 132, height: 132, correctLevel: QRCode.CorrectLevel.M });
+  new QRCode($('#qr'), {text:joinURL, width:126, height:126, correctLevel:QRCode.CorrectLevel.M});
 
-  // ---- 커서 상태 ----
   const cv = $('#stage'), ctx = cv.getContext('2d');
-  let W=0, H=0, DPR=1;
+  let W=0,H=0;
   function resize(){
-    DPR = Math.min(devicePixelRatio||1, 2);
+    const d = Math.min(devicePixelRatio||1, 2);
     W = cv.clientWidth; H = cv.clientHeight;
-    cv.width = W*DPR; cv.height = H*DPR;
-    ctx.setTransform(DPR,0,0,DPR,0,0);
+    cv.width = W*d; cv.height = H*d; ctx.setTransform(d,0,0,d,0,0);
   }
   addEventListener('resize', resize); resize();
 
-  let ref = null;                    // 보정 기준 {a,b}
-  let raw = {x:W/2, y:H/2};          // 목표 좌표
-  let cur = {x:W/2, y:H/2};          // 보간된 좌표
-  let trail = [];
-  let pressA = 0, pressB = 0;
-  let hits = [];
-  let msgCount = 0, lastRate = performance.now();
-
-  const DEG_X = 40;   // 가로 전체를 덮는 좌우 회전 각도
-  const DEG_Y = 26;   // 세로 전체를 덮는 상하 각도
-
+  /* ---------- 조준 ---------- */
+  let ref=null, raw={x:W/2,y:H/2}, cur={x:W/2,y:H/2}, prev={x:W/2,y:H/2}, vel=0;
+  const DEG_X = 40, DEG_Y = 26;
   function applyOrientation(o){
-    if (!ref) return;
-    let dA = ((o.a - ref.a + 540) % 360) - 180;   // yaw (오른쪽으로 돌리면 감소)
-    let dB = o.b - ref.b;                          // pitch (위로 들면 증가)
-    raw.x = W/2 - dA * (W / DEG_X);
-    raw.y = H/2 - dB * (H / DEG_Y);
-    raw.x = Math.max(0, Math.min(W, raw.x));
-    raw.y = Math.max(0, Math.min(H, raw.y));
+    if(!ref) return;
+    const dA = ((o.a - ref.a + 540) % 360) - 180;
+    const dB = o.b - ref.b;
+    raw.x = clamp(W/2 - dA*(W/DEG_X), 0, W);
+    raw.y = clamp(H/2 - dB*(H/DEG_Y), 0, H);
   }
 
-  function draw(){
-    cur.x += (raw.x - cur.x) * 0.32;
-    cur.y += (raw.y - cur.y) * 0.32;
+  /* ---------- 상태 ---------- */
+  let scene = 'menu';
+  let game = null, gameId = null;
+  let last = performance.now();
+  let shake = 0, flash = 0, lastA = 0;
+  const trail = [];
 
-    ctx.fillStyle = '#0F1512'; ctx.fillRect(0,0,W,H);
+  const MENU = [
+    {id:'slice',  name:'과일 자르기', desc:'폰을 빠르게 휘둘러 자르기', color:'#D9455F'},
+    {id:'target', name:'표적 사격',   desc:'조준하고 A로 쏘기',        color:'#E39B6A'},
+    {id:'space',  name:'우주 슈팅',   desc:'좌우로 움직이며 A로 발사', color:'#5C8FD6'},
+  ];
+  let menuIdx = 0;
 
-    // 조준 격자
-    ctx.strokeStyle = 'rgba(237,235,228,.045)'; ctx.lineWidth = 1;
-    for(let x=0;x<W;x+=64){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-    for(let y=0;y<H;y+=64){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  /* ---------- 랭킹 ---------- */
+  const hsKey = id => 'smcln-wii-hs-' + id;
+  function best(id){ try{ return JSON.parse(localStorage.getItem(hsKey(id))) || []; }catch(e){ return []; } }
+  function pushScore(id, s){
+    const a = best(id); a.push(s); a.sort((x,y)=>y-x);
+    try{ localStorage.setItem(hsKey(id), JSON.stringify(a.slice(0,5))); }catch(e){}
+  }
 
-    // 중앙 기준점
-    ctx.strokeStyle = 'rgba(47,122,91,.5)';
-    ctx.beginPath(); ctx.arc(W/2,H/2,7,0,7); ctx.stroke();
+  /* ---------- 입력 ---------- */
+  function pressA(){
+    if (scene==='menu') startGame(MENU[menuIdx].id);
+    else if (scene==='play'){ game.fire && game.fire(); }
+    else if (scene==='result') startGame(gameId);
+  }
+  function pressB(){
+    if (scene==='play') endGame();
+    else if (scene==='result'){ scene='menu'; sendPad('menu'); }
+    else ref = null;
+  }
+  function startGame(id){
+    gameId = id; game = MAKE[id](); scene = 'play'; sendPad(id);
+  }
+  function endGame(){
+    if (game) pushScore(gameId, Math.max(0, Math.round(game.score)));
+    scene = 'result'; sendPad('result');
+  }
 
-    // 잔상
-    trail.push({x:cur.x,y:cur.y,t:performance.now()});
-    trail = trail.filter(p => performance.now()-p.t < 260);
-    ctx.lineWidth = 3; ctx.lineCap='round';
-    for(let i=1;i<trail.length;i++){
-      const a = i/trail.length*0.5;
-      ctx.strokeStyle = 'rgba(227,155,106,'+a.toFixed(3)+')';
-      ctx.beginPath(); ctx.moveTo(trail[i-1].x,trail[i-1].y);
-      ctx.lineTo(trail[i].x,trail[i].y); ctx.stroke();
+  /* ---------- 그리기 유틸 ---------- */
+  function txt(s,x,y,size,color,weight,align){
+    ctx.fillStyle=color; ctx.textAlign=align||'center'; ctx.textBaseline='alphabetic';
+    ctx.font=(weight||600)+' '+size+'px Pretendard, sans-serif'; ctx.fillText(s,x,y);
+  }
+  function mono(s,x,y,size,color,align){
+    ctx.fillStyle=color; ctx.textAlign=align||'center';
+    ctx.font='600 '+size+'px "IBM Plex Mono", monospace'; ctx.fillText(s,x,y);
+  }
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+  }
+  function segDist(px,py,x1,y1,x2,y2){
+    const dx=x2-x1, dy=y2-y1, L=dx*dx+dy*dy;
+    let t = L ? ((px-x1)*dx+(py-y1)*dy)/L : 0;
+    t = clamp(t,0,1);
+    return Math.hypot(px-(x1+t*dx), py-(y1+t*dy));
+  }
+
+  const MAKE = {};
+
+  /* =====================================================================
+     게임 1 · 과일 자르기
+     ===================================================================== */
+  MAKE.slice = () => {
+    const FR = [
+      {c:'#D9455F', in:'#F4C3CB', r:44},
+      {c:'#C0432E', in:'#F0D8C6', r:34},
+      {c:'#E39B6A', in:'#F7DDBE', r:34},
+      {c:'#7FA84A', in:'#DDEAC0', r:30},
+      {c:'#7A5AA8', in:'#DCCDEF', r:28},
+      {c:'#E0C04A', in:'#F6EAB6', r:30},
+    ];
+    function drawWhole(f){
+      ctx.save(); ctx.translate(f.x,f.y); ctx.rotate(f.rot);
+      ctx.fillStyle=f.c; ctx.beginPath(); ctx.arc(0,0,f.r,0,7); ctx.fill();
+      if (f.bomb){
+        ctx.strokeStyle='#6B747C'; ctx.lineWidth=4;
+        ctx.beginPath(); ctx.moveTo(0,-f.r); ctx.quadraticCurveTo(14,-f.r-16,4,-f.r-26); ctx.stroke();
+        ctx.fillStyle='#E36A4A'; ctx.beginPath(); ctx.arc(4,-f.r-28,5,0,7); ctx.fill();
+      } else {
+        ctx.fillStyle='rgba(255,255,255,.22)';
+        ctx.beginPath(); ctx.ellipse(-f.r*0.32,-f.r*0.36,f.r*0.3,f.r*0.2,-0.6,0,7); ctx.fill();
+      }
+      ctx.restore();
     }
+    function drawHalf(b){
+      ctx.save(); ctx.translate(b.x,b.y); ctx.rotate(b.rot);
+      ctx.globalAlpha = clamp(b.life,0,1);
+      ctx.fillStyle=b.c; ctx.beginPath(); ctx.arc(0,0,b.r,b.ang,b.ang+Math.PI); ctx.fill();
+      ctx.fillStyle=b.inc; ctx.beginPath(); ctx.arc(0,0,b.r*0.78,b.ang,b.ang+Math.PI); ctx.fill();
+      ctx.globalAlpha=1; ctx.restore();
+    }
+    return {
+      title:'과일 자르기', time:60, score:0, combo:0, comboT:0,
+      items:[], bits:[], spark:[], spawnT:0.6,
+      update(dt){
+        this.time -= dt;
+        if (this.time<=0){ this.time=0; endGame(); return; }
+        this.comboT -= dt; if (this.comboT<=0) this.combo=0;
 
-    // 명중 표시
-    hits = hits.filter(h => performance.now()-h.t < 520);
-    hits.forEach(h => {
-      const k = (performance.now()-h.t)/520;
-      ctx.strokeStyle = 'rgba(47,122,91,'+(1-k).toFixed(3)+')';
-      ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.arc(h.x,h.y,10+k*46,0,7); ctx.stroke();
+        this.spawnT -= dt;
+        if (this.spawnT<=0){
+          const prog = 1 - this.time/60;
+          this.spawnT = rand(0.55,1.0) - prog*0.28;
+          const n = Math.random() < 0.28+prog*0.2 ? 2 : 1;
+          for(let i=0;i<n;i++) this.spawn(prog);
+        }
+        for (const f of this.items){
+          f.vy += 900*dt; f.x += f.vx*dt; f.y += f.vy*dt; f.rot += f.spin*dt;
+          if (f.y > H+100) f.dead = true;
+          if (f.cut) continue;
+          if (vel > 900 && segDist(f.x,f.y, prev.x,prev.y, cur.x,cur.y) < f.r+8) this.cut(f);
+        }
+        this.items = this.items.filter(f=>!f.dead);
+        for (const b of this.bits){
+          b.vy += 900*dt; b.x += b.vx*dt; b.y += b.vy*dt; b.rot += b.spin*dt; b.life -= dt;
+          if (b.life<=0 || b.y>H+100) b.dead=true;
+        }
+        this.bits = this.bits.filter(b=>!b.dead);
+        for (const s of this.spark){
+          s.vy += 500*dt; s.x += s.vx*dt; s.y += s.vy*dt; s.life -= dt;
+          if (s.life<=0) s.dead=true;
+        }
+        this.spark = this.spark.filter(s=>!s.dead);
+      },
+      spawn(prog){
+        const bomb = Math.random() < 0.10 + prog*0.10;
+        const t = bomb ? {c:'#22262A', in:'#3A4148', r:30} : FR[Math.floor(Math.random()*FR.length)];
+        const x = rand(W*0.15, W*0.85);
+        this.items.push({
+          x, y:H+60, r:t.r, c:t.c, inc:t.in, bomb,
+          vx:(W/2-x)*rand(0.25,0.55), vy:-rand(760,940),
+          rot:0, spin:rand(-3,3), cut:false, dead:false
+        });
+      },
+      cut(f){
+        f.cut = true; f.dead = true;
+        const ang = Math.atan2(cur.y-prev.y, cur.x-prev.x);
+        for(let s=-1;s<=1;s+=2){
+          this.bits.push({x:f.x,y:f.y,r:f.r,c:f.c,inc:f.inc,ang,
+            vx:Math.cos(ang+s*1.6)*220+f.vx*0.4, vy:Math.sin(ang+s*1.6)*220+f.vy*0.4,
+            rot:f.rot, spin:s*4, life:1.8, dead:false});
+        }
+        for(let i=0;i<16;i++){
+          this.spark.push({x:f.x,y:f.y,c:f.bomb?'#8A939B':f.inc,
+            vx:rand(-260,260), vy:rand(-320,120), r:rand(2,6), life:rand(.4,.9), dead:false});
+        }
+        if (f.bomb){ this.score -= 20; this.combo=0; shake=16; flash=.35; }
+        else { this.combo++; this.comboT=0.55; this.score += 10*Math.min(this.combo,6); }
+      },
+      draw(){
+        const g = ctx.createLinearGradient(0,0,0,H);
+        g.addColorStop(0,'#3A2E22'); g.addColorStop(1,'#241C14');
+        ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+        ctx.strokeStyle='rgba(255,255,255,.028)'; ctx.lineWidth=2;
+        for(let y=30;y<H;y+=46){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+        for (const s of this.spark){
+          ctx.globalAlpha = clamp(s.life,0,1);
+          ctx.fillStyle=s.c; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,7); ctx.fill();
+        }
+        ctx.globalAlpha=1;
+        for (const b of this.bits) drawHalf(b);
+        for (const f of this.items) drawWhole(f);
+
+        hud(this, [['점수', Math.round(this.score)], ['남은 시간', Math.ceil(this.time)+'초']]);
+        if (this.combo>1) txt(this.combo+' 연속', cur.x, cur.y-44, 22, 'rgba(227,155,106,.95)', 700);
+      }
+    };
+  };
+
+  /* =====================================================================
+     게임 2 · 표적 사격
+     ===================================================================== */
+  MAKE.target = () => ({
+    title:'표적 사격', time:30, score:0, shots:0, hit:0, combo:0,
+    targets:[], marks:[], spawnT:0.3, msg:'', msgT:0,
+    update(dt){
+      this.time -= dt;
+      if (this.time<=0){ this.time=0; endGame(); return; }
+      this.msgT -= dt; this.spawnT -= dt;
+      const prog = 1 - this.time/30;
+      if (this.spawnT<=0 && this.targets.length < 4){
+        this.spawnT = rand(0.35,0.8);
+        const r = rand(30,60) - prog*8;
+        const t = {x:rand(r+40, W-r-40), y:rand(r+90, H*0.82-r), r,
+          life:rand(1.6,2.6)-prog*0.5, drift:rand(-40,40)*prog, born:0};
+        t.max = t.life; this.targets.push(t);
+      }
+      for (const t of this.targets){
+        t.life -= dt; t.born += dt; t.x += t.drift*dt;
+        if (t.x<t.r+20 || t.x>W-t.r-20) t.drift*=-1;
+        if (t.life<=0){ t.dead=true; this.combo=0; }
+      }
+      this.targets = this.targets.filter(t=>!t.dead);
+      for (const m of this.marks){ m.life-=dt; if(m.life<=0) m.dead=true; }
+      this.marks = this.marks.filter(m=>!m.dead);
+    },
+    fire(){
+      this.shots++;
+      let got = null;
+      for (const t of this.targets)
+        if (Math.hypot(cur.x-t.x, cur.y-t.y) < t.r){ got = t; break; }
+      this.marks.push({x:cur.x, y:cur.y, life:0.5, ok:!!got});
+      if (got){
+        got.dead = true; this.hit++; this.combo++;
+        const acc = 1 - Math.hypot(cur.x-got.x, cur.y-got.y)/got.r;
+        const base = Math.round(60 - got.r*0.5 + acc*40);
+        const gain = base*Math.min(this.combo,5);
+        this.score += gain;
+        this.msg = (acc>0.75 ? '정중앙  +' : '명중  +') + gain;
+        this.msgT = 0.8;
+      } else {
+        this.combo = 0; this.score -= 5; shake = 6;
+        this.msg = '빗나감'; this.msgT = 0.6;
+      }
+    },
+    draw(){
+      const g = ctx.createLinearGradient(0,0,0,H);
+      g.addColorStop(0,'#7FB6D4'); g.addColorStop(0.72,'#C3E0EC');
+      g.addColorStop(0.72,'#5E8F3E'); g.addColorStop(1,'#3E6A28');
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='rgba(255,255,255,.5)';
+      const drift = (performance.now()/90) % (W+240);
+      for(let i=0;i<5;i++){
+        const cx = ((i*W/5 + drift) % (W+240)) - 120, cy = 90+i*34;
+        ctx.beginPath();
+        ctx.arc(cx,cy,30,0,7); ctx.arc(cx+34,cy-8,38,0,7); ctx.arc(cx+72,cy,26,0,7);
+        ctx.fill();
+      }
+      for (const t of this.targets){
+        const k = clamp(t.life/t.max,0,1), pop = clamp(t.born*7,0,1), r = t.r*pop;
+        ctx.globalAlpha = 0.35 + k*0.65;
+        [['#F2EEE6',1],['#C4553F',0.72],['#F2EEE6',0.46],['#C4553F',0.22]].forEach(p=>{
+          ctx.fillStyle=p[0]; ctx.beginPath(); ctx.arc(t.x,t.y,r*p[1],0,7); ctx.fill();
+        });
+        ctx.globalAlpha=1;
+        ctx.strokeStyle='rgba(27,30,26,.35)'; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(t.x,t.y,r,0,7); ctx.stroke();
+      }
+      for (const m of this.marks){
+        ctx.globalAlpha = clamp(m.life*2,0,1);
+        ctx.strokeStyle = m.ok ? '#1F4A38' : 'rgba(27,30,26,.5)';
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(m.x,m.y,7,0,7); ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      hud(this, [
+        ['점수', Math.round(this.score)],
+        ['남은 시간', Math.ceil(this.time)+'초'],
+        ['명중률', this.shots ? Math.round(this.hit/this.shots*100)+'%' : '—'],
+      ], true);
+      if (this.msgT>0){
+        ctx.globalAlpha = clamp(this.msgT*2,0,1);
+        txt(this.msg, cur.x, cur.y-42, 20, '#1B1E1A', 700);
+        ctx.globalAlpha = 1;
+      }
+    }
+  });
+
+  /* =====================================================================
+     게임 3 · 우주 슈팅
+     ===================================================================== */
+  MAKE.space = () => {
+    const stars = Array.from({length:120}, ()=>({x:rand(0,W), y:rand(0,H), z:rand(.3,1)}));
+    return {
+      title:'우주 슈팅', score:0, lives:3, t:0,
+      shipX:W/2, bul:[], foes:[], boom:[], spawnT:1, cool:0,
+      update(dt){
+        this.t += dt; this.cool -= dt;
+        for (const s of stars){ s.y += (40+s.z*180)*dt; if (s.y>H){ s.y=-4; s.x=rand(0,W); } }
+        this.shipX += (cur.x - this.shipX)*0.25;
+        this.shipX = clamp(this.shipX, 34, W-34);
+
+        const lvl = 1 + this.t/26;
+        this.spawnT -= dt;
+        if (this.spawnT<=0){
+          this.spawnT = rand(0.7,1.25)/lvl;
+          this.foes.push({x:rand(40,W-40), y:-30, r:rand(17,25),
+            vx:rand(-70,70)*Math.min(lvl,2.2), vy:rand(80,130)*Math.min(lvl,2.4),
+            hue:Math.floor(rand(0,3))});
+        }
+        for (const b of this.bul){ b.y -= 760*dt; if (b.y<-20) b.dead=true; }
+        for (const f of this.foes){
+          f.x += f.vx*dt; f.y += f.vy*dt;
+          if (f.x<f.r+10 || f.x>W-f.r-10) f.vx*=-1;
+          if (f.y > H-40){ f.dead=true; this.hurt(); continue; }
+          if (Math.abs(f.x-this.shipX)<f.r+18 && Math.abs(f.y-(H-70))<f.r+16){ f.dead=true; this.hurt(); continue; }
+          for (const b of this.bul){
+            if (!b.dead && Math.hypot(b.x-f.x, b.y-f.y) < f.r+5){
+              b.dead=true; f.dead=true; this.score += 25;
+              for(let i=0;i<14;i++) this.boom.push({x:f.x,y:f.y,vx:rand(-200,200),vy:rand(-200,200),
+                r:rand(2,5), life:rand(.3,.7), dead:false});
+            }
+          }
+        }
+        this.bul = this.bul.filter(b=>!b.dead);
+        this.foes = this.foes.filter(f=>!f.dead);
+        for (const p of this.boom){ p.x+=p.vx*dt; p.y+=p.vy*dt; p.life-=dt; if(p.life<=0)p.dead=true; }
+        this.boom = this.boom.filter(p=>!p.dead);
+      },
+      hurt(){ this.lives--; shake=18; flash=.4; if (this.lives<=0) endGame(); },
+      fire(){
+        if (this.cool>0) return;
+        this.cool = 0.17;
+        this.bul.push({x:this.shipX, y:H-84, dead:false});
+      },
+      draw(){
+        const g = ctx.createLinearGradient(0,0,0,H);
+        g.addColorStop(0,'#12132A'); g.addColorStop(1,'#080A16');
+        ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+        for (const s of stars){
+          ctx.fillStyle='rgba(237,235,228,'+(0.15+s.z*0.5).toFixed(2)+')';
+          ctx.fillRect(s.x, s.y, 1.6, 1.6+s.z*3);
+        }
+        for (const p of this.boom){
+          ctx.globalAlpha = clamp(p.life*1.6,0,1); ctx.fillStyle='#E39B6A';
+          ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,7); ctx.fill();
+        }
+        ctx.globalAlpha=1;
+        const cols=['#C4553F','#5C8FD6','#8E6BC4'];
+        for (const f of this.foes){
+          ctx.fillStyle=cols[f.hue];
+          ctx.beginPath();
+          ctx.moveTo(f.x, f.y+f.r); ctx.lineTo(f.x-f.r, f.y-f.r*0.6);
+          ctx.lineTo(f.x, f.y-f.r*0.15); ctx.lineTo(f.x+f.r, f.y-f.r*0.6);
+          ctx.closePath(); ctx.fill();
+          ctx.fillStyle='rgba(237,235,228,.85)';
+          ctx.beginPath(); ctx.arc(f.x, f.y-f.r*0.1, f.r*0.22, 0, 7); ctx.fill();
+        }
+        ctx.fillStyle='#E39B6A';
+        for (const b of this.bul){ roundRect(b.x-2.5, b.y-14, 5, 18, 2.5); ctx.fill(); }
+        const sx=this.shipX, sy=H-70;
+        ctx.fillStyle='rgba(227,155,106,'+(0.5+Math.random()*0.4).toFixed(2)+')';
+        ctx.beginPath(); ctx.moveTo(sx-6,sy+10); ctx.lineTo(sx,sy+10+rand(10,22)); ctx.lineTo(sx+6,sy+10); ctx.fill();
+        ctx.fillStyle='#EDEBE4';
+        ctx.beginPath(); ctx.moveTo(sx, sy-22); ctx.lineTo(sx-19, sy+16);
+        ctx.lineTo(sx, sy+8); ctx.lineTo(sx+19, sy+16); ctx.closePath(); ctx.fill();
+        ctx.fillStyle='#2F7A5B';
+        ctx.beginPath(); ctx.arc(sx, sy-4, 5, 0, 7); ctx.fill();
+
+        hud(this, [['점수', Math.round(this.score)], ['목숨', '●'.repeat(Math.max(0,this.lives))]]);
+      }
+    };
+  };
+
+  /* ---------- HUD ---------- */
+  function hud(g, rows, dark){
+    const c = dark ? '#1B1E1A' : '#EDEBE4';
+    const m = dark ? 'rgba(27,30,26,.55)' : 'rgba(237,235,228,.5)';
+    const x = W - 34;
+    rows.forEach((r,i)=>{
+      const y = 52 + i*54;
+      txt(r[0], x, y-20, 12, m, 500, 'right');
+      mono(String(r[1]), x, y+6, 26, c, 'right');
     });
+    txt(g.title, 34, 50, 17, m, 600, 'left');
+  }
 
-    // 커서
-    const held = performance.now()-pressA < 120;
+  /* ---------- 메뉴 · 결과 ---------- */
+  function drawMenu(){
+    ctx.fillStyle='#0F1512'; ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle='rgba(237,235,228,.04)'; ctx.lineWidth=1;
+    for(let x=0;x<W;x+=70){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    for(let y=0;y<H;y+=70){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+    txt('세미콜론 리모트', W/2, H*0.19, 15, 'rgba(237,235,228,.42)', 500);
+    txt('겨누고 A를 눌러 고르세요', W/2, H*0.19+36, 30, '#EDEBE4', 700);
+
+    const cw = Math.min(280, (W-160)/3), gap = 26;
+    const total = cw*3 + gap*2, x0 = (W-total)/2, ch = 210, y0 = H*0.40;
+    let hovered = -1;
+    MENU.forEach((m,i)=>{
+      const x = x0 + i*(cw+gap);
+      const on = cur.x>x && cur.x<x+cw && cur.y>y0 && cur.y<y0+ch;
+      if (on) hovered = i;
+      ctx.fillStyle = on ? 'rgba(237,235,228,.10)' : 'rgba(237,235,228,.035)';
+      roundRect(x, y0, cw, ch, 18); ctx.fill();
+      ctx.strokeStyle = on ? m.color : 'rgba(237,235,228,.12)';
+      ctx.lineWidth = on ? 2.5 : 1; ctx.stroke();
+      ctx.fillStyle = m.color;
+      ctx.beginPath(); ctx.arc(x+cw/2, y0+58, on?22:18, 0, 7); ctx.fill();
+      txt(m.name, x+cw/2, y0+120, 21, '#EDEBE4', 700);
+      txt(m.desc, x+cw/2, y0+148, 13, 'rgba(237,235,228,.45)', 500);
+      const b = best(m.id)[0];
+      mono(b!=null ? '최고 '+b : '기록 없음', x+cw/2, y0+182, 13,
+        b!=null ? 'rgba(227,155,106,.9)' : 'rgba(237,235,228,.28)');
+    });
+    if (hovered >= 0) menuIdx = hovered;
+    if (!ref) txt('폰에서 조준 맞추기를 먼저 눌러주세요', W/2, H-72, 15, 'rgba(237,235,228,.3)', 500);
+  }
+
+  function drawResult(){
+    ctx.fillStyle='rgba(15,21,18,.88)'; ctx.fillRect(0,0,W,H);
+    const g = MENU.find(m=>m.id===gameId);
+    txt(g.name, W/2, H*0.24, 16, 'rgba(237,235,228,.45)', 500);
+    txt('기록', W/2, H*0.24+36, 26, '#EDEBE4', 600);
+    mono(String(Math.max(0,Math.round(game.score))), W/2, H*0.24+130, 84, '#E39B6A');
+    txt('최고 기록', W/2, H*0.60, 13, 'rgba(237,235,228,.4)', 500);
+    best(gameId).slice(0,5).forEach((s,i)=>{
+      mono((i+1)+'    '+s, W/2, H*0.60+32+i*26, 16,
+        i===0 ? 'rgba(237,235,228,.9)' : 'rgba(237,235,228,.45)');
+    });
+    txt('A 다시하기        B 메뉴로', W/2, H-64, 16, 'rgba(237,235,228,.6)', 600);
+  }
+
+  /* ---------- 커서 ---------- */
+  function drawCursor(){
+    const held = performance.now()-lastA < 110;
     ctx.strokeStyle = held ? '#2F7A5B' : '#E39B6A';
     ctx.lineWidth = held ? 4 : 2.5;
-    ctx.beginPath(); ctx.arc(cur.x,cur.y,held?15:18,0,7); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cur.x,cur.y, held?13:17, 0, 7); ctx.stroke();
     ctx.beginPath();
-    ctx.moveTo(cur.x-26,cur.y); ctx.lineTo(cur.x-8,cur.y);
-    ctx.moveTo(cur.x+8,cur.y);  ctx.lineTo(cur.x+26,cur.y);
-    ctx.moveTo(cur.x,cur.y-26); ctx.lineTo(cur.x,cur.y-8);
-    ctx.moveTo(cur.x,cur.y+8);  ctx.lineTo(cur.x,cur.y+26);
+    ctx.moveTo(cur.x-25,cur.y); ctx.lineTo(cur.x-7,cur.y);
+    ctx.moveTo(cur.x+7,cur.y);  ctx.lineTo(cur.x+25,cur.y);
+    ctx.moveTo(cur.x,cur.y-25); ctx.lineTo(cur.x,cur.y-7);
+    ctx.moveTo(cur.x,cur.y+7);  ctx.lineTo(cur.x,cur.y+25);
     ctx.stroke();
-
-    if (!ref){
-      ctx.fillStyle = 'rgba(237,235,228,.34)';
-      ctx.font = '15px Pretendard, sans-serif'; ctx.textAlign='center';
-      ctx.fillText('조준이 아직 맞춰지지 않았습니다', W/2, H/2+40);
-    }
-    requestAnimationFrame(draw);
   }
-  draw();
-
-  addEventListener('keydown', e => {
-    if (e.key==='c'||e.key==='C') { ref=null; }
-    if (e.key==='h'||e.key==='H') {
-      const p=$('#panel'); p.style.display = p.style.display==='none'?'block':'none';
+  function drawTrail(now){
+    while (trail.length && now-trail[0].t > 200) trail.shift();
+    ctx.lineCap='round';
+    for(let i=1;i<trail.length;i++){
+      const a = i/trail.length;
+      ctx.strokeStyle='rgba(242,238,230,'+(a*0.7).toFixed(3)+')';
+      ctx.lineWidth = 2 + a*7;
+      ctx.beginPath(); ctx.moveTo(trail[i-1].x,trail[i-1].y); ctx.lineTo(trail[i].x,trail[i].y); ctx.stroke();
     }
+  }
+
+  /* ---------- 루프 ---------- */
+  function loop(now){
+    const dt = Math.min((now-last)/1000, 0.05); last = now;
+    prev.x = cur.x; prev.y = cur.y;
+    cur.x += (raw.x-cur.x)*0.34; cur.y += (raw.y-cur.y)*0.34;
+    vel = Math.hypot(cur.x-prev.x, cur.y-prev.y)/Math.max(dt,0.001);
+    trail.push({x:cur.x, y:cur.y, t:now});
+
+    ctx.save();
+    if (shake>0){ ctx.translate(rand(-shake,shake), rand(-shake,shake)); shake*=0.86; if(shake<0.4)shake=0; }
+
+    if (scene==='play'){ game.update(dt); if (scene==='play') game.draw(); else { game.draw(); drawResult(); } }
+    else if (scene==='menu') drawMenu();
+    else { game.draw(); drawResult(); }
+
+    if (scene==='play' && gameId==='slice') drawTrail(now);
+    drawCursor();
+    ctx.restore();
+
+    if (flash>0){ ctx.fillStyle='rgba(255,120,90,'+flash.toFixed(3)+')'; ctx.fillRect(0,0,W,H); flash*=0.85; if(flash<0.01)flash=0; }
+    if (!ref && scene==='play')
+      txt('조준이 맞춰지지 않았습니다 — 폰에서 조준 맞추기', W/2, H-28, 14, 'rgba(237,235,228,.35)', 500);
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  /* ---------- 마우스 대체 조작 ---------- */
+  cv.addEventListener('mousemove', e => { if(!ref) ref={a:0,b:0}; raw.x=e.clientX; raw.y=e.clientY; });
+  cv.addEventListener('mousedown', e => { e.preventDefault();
+    if(e.button===0){ lastA=performance.now(); pressA(); } else pressB(); });
+  cv.addEventListener('contextmenu', e => e.preventDefault());
+  addEventListener('keydown', e => {
+    if (e.key==='c'||e.key==='C') ref=null;
+    if (e.key==='m'||e.key==='M'){ scene='menu'; sendPad('menu'); }
+    if (e.key==='h'||e.key==='H'){ const p=$('#panel'); p.style.display = p.style.display==='none'?'block':'none'; }
   });
 
-  // ---- 연결 ----
+  /* ---------- 연결 ---------- */
   let conn = null;
-  const peer = new Peer(PREFIX + code, {debug:0});
-  peer.on('error', e => {
-    $('#state').textContent = '연결 오류 — 새로고침하세요';
-    console.warn(e);
-  });
+  function sendPad(mode){ if (conn && conn.open) conn.send({t:'pad', mode}); }
+  const peer = new Peer(PREFIX+code, {debug:0});
+  peer.on('error', ()=>{ $('#state').textContent='연결 오류 — 새로고침하세요'; });
   peer.on('connection', c => {
     if (conn && conn.open) conn.close();
     conn = c;
-    c.on('open', () => {
-      $('#dot').classList.add('on');
-      $('#state').textContent = '컨트롤러 연결됨';
-      pingLoop();
+    c.on('open', ()=>{
+      $('#dot').classList.add('on'); $('#state').textContent='컨트롤러 연결됨';
+      $('#panel').style.display='none';
+      sendPad(scene==='play' ? gameId : scene);
     });
     c.on('data', d => {
-      msgCount++;
-      if (d.t === 'o') applyOrientation(d);
-      else if (d.t === 'cal') { ref = {a:d.a, b:d.b}; }
-      else if (d.t === 'btn') {
-        if (d.k === 'A' && d.down) { pressA = performance.now(); hits.push({x:cur.x,y:cur.y,t:performance.now()}); }
-        if (d.k === 'B' && d.down) { pressB = performance.now(); ref = null; }
+      if (d.t==='o') applyOrientation(d);
+      else if (d.t==='cal') ref = {a:d.a, b:d.b};
+      else if (d.t==='btn' && d.down){
+        if (d.k==='A'){ lastA=performance.now(); pressA(); } else pressB();
       }
-      else if (d.t === 'pong') $('#ping').textContent = (Date.now()-d.ts) + ' ms';
+      else if (d.t==='pong') $('#ping').textContent = (Date.now()-d.ts)+' ms';
     });
-    c.on('close', () => {
-      $('#dot').classList.remove('on');
-      $('#state').textContent = '연결 끊김 — 다시 연결하세요';
+    c.on('close', ()=>{
+      $('#dot').classList.remove('on'); $('#state').textContent='연결 끊김';
+      $('#panel').style.display='block';
     });
   });
-
-  function pingLoop(){
-    setInterval(() => { if (conn && conn.open) conn.send({t:'ping', ts:Date.now()}); }, 1000);
-  }
-  setInterval(() => {
-    const now = performance.now();
-    const hz = msgCount / ((now-lastRate)/1000);
-    $('#rate').textContent = hz.toFixed(0) + ' /s';
-    msgCount = 0; lastRate = now;
-  }, 1000);
+  setInterval(()=>{ if(conn&&conn.open) conn.send({t:'ping', ts:Date.now()}); }, 1500);
 }
 
 function randCode(){
@@ -345,9 +672,9 @@ function randCode(){
   return o;
 }
 
-/* =========================================================
-   컨트롤러 (폰)
-   ========================================================= */
+/* =====================================================================
+   컨트롤러
+   ===================================================================== */
 function startRemote(){
   show('#remote');
   const pre = (P.get('code')||'').toUpperCase();
@@ -355,74 +682,73 @@ function startRemote(){
 
   $('#btnJoin').onclick = async () => {
     const code = $('#codein').value.trim().toUpperCase();
-    if (code.length !== 4) { $('#rerr').textContent = '코드는 네 글자입니다.'; return; }
-    $('#rerr').textContent = '';
-
-    // iOS: 사용자 동작 안에서 센서 권한 요청
-    try {
-      if (typeof DeviceOrientationEvent !== 'undefined' &&
-          typeof DeviceOrientationEvent.requestPermission === 'function') {
+    if (code.length!==4){ $('#rerr').textContent='코드는 네 글자입니다.'; return; }
+    $('#rerr').textContent='';
+    try{
+      if (typeof DeviceOrientationEvent!=='undefined' && typeof DeviceOrientationEvent.requestPermission==='function'){
         const r = await DeviceOrientationEvent.requestPermission();
-        if (r !== 'granted') { $('#rerr').textContent = '센서 권한이 필요합니다. 설정 > Safari > 동작 및 방향 접근을 켜주세요.'; return; }
+        if (r!=='granted'){ $('#rerr').textContent='센서 권한이 필요합니다. 설정 > Safari > 동작 및 방향 접근을 켜주세요.'; return; }
       }
-    } catch(e){ $('#rerr').textContent = '센서 권한 요청에 실패했습니다.'; return; }
-
+    }catch(e){ $('#rerr').textContent='센서 권한 요청에 실패했습니다.'; return; }
     connect(code);
   };
 
-  let conn = null, last = {a:0,b:0,g:0};
+  let conn=null, last={a:0,b:0,g:0};
+  const PADS = {
+    menu:   ['게임을 고르세요', '커서를 게임 위에 올리고 A를 누르세요.'],
+    result: ['기록이 나왔습니다', 'A 다시하기 · B 메뉴로'],
+    slice:  ['과일 자르기', '폰을 빠르게 휘둘러 과일을 자르세요.<br>폭탄은 피하세요.'],
+    target: ['표적 사격', '표적을 겨누고 A로 쏘세요.<br>중앙에 맞출수록 점수가 높습니다.'],
+    space:  ['우주 슈팅', '좌우로 움직이고 A로 발사하세요.<br>목숨은 세 개입니다.'],
+  };
+  function setPad(mode){
+    const p = PADS[mode]; if(!p) return;
+    $('#aimTitle').textContent = p[0];
+    $('#aimSub').innerHTML = p[1];
+  }
 
   function connect(code){
-    $('#rerr').textContent = '연결하는 중…';
+    $('#rerr').textContent='연결하는 중…';
     const peer = new Peer({debug:0});
-    peer.on('open', () => {
-      conn = peer.connect(PREFIX + code, {reliable:false});
-      conn.on('open', () => {
-        $('#rjoin').style.display='none';
-        $('#rpad').style.display='flex';
-        $('#rcode').textContent = code;
-        keepAwake();
-        startSensors();
+    peer.on('open', ()=>{
+      conn = peer.connect(PREFIX+code, {reliable:false});
+      conn.on('open', ()=>{
+        $('#rjoin').style.display='none'; $('#rpad').style.display='flex';
+        $('#rcode').textContent = code; keepAwake(); startSensors();
       });
-      conn.on('data', d => { if (d.t==='ping') conn.send({t:'pong', ts:d.ts}); });
-      conn.on('close', () => {
-        $('#rstate').textContent = '연결 끊김 — 새로고침하세요';
+      conn.on('data', d=>{
+        if (d.t==='ping') conn.send({t:'pong', ts:d.ts});
+        else if (d.t==='pad') setPad(d.mode);
       });
-      conn.on('error', () => { $('#rerr').textContent = '연결 실패. 코드를 확인하세요.'; });
+      conn.on('close', ()=>{ $('#rstate').textContent='연결 끊김 — 새로고침하세요'; });
+      conn.on('error', ()=>{ $('#rerr').textContent='연결 실패. 코드를 확인하세요.'; });
     });
-    peer.on('error', e => {
+    peer.on('error', e=>{
       $('#rerr').textContent = (e.type==='peer-unavailable')
         ? '해당 코드의 화면을 찾을 수 없습니다.' : '연결 오류가 발생했습니다.';
     });
   }
-
   function startSensors(){
-    let lastSend = 0;
-    addEventListener('deviceorientation', e => {
-      if (e.alpha == null) return;
+    let t0 = 0;
+    addEventListener('deviceorientation', e=>{
+      if (e.alpha==null) return;
       last = {a:e.alpha, b:e.beta, g:e.gamma};
-      const now = performance.now();
-      if (now - lastSend < 20) return;      // 약 50Hz
-      lastSend = now;
+      const n = performance.now(); if (n-t0 < 20) return; t0 = n;
       if (conn && conn.open) conn.send({t:'o', a:last.a, b:last.b, g:last.g});
     }, true);
   }
-
   const send = o => { if (conn && conn.open) conn.send(o); };
   $('#btnCal').onclick = () => send({t:'cal', a:last.a, b:last.b});
-  bindBtn($('#btnA'), 'A'); bindBtn($('#btnB'), 'B');
-  function bindBtn(el, k){
-    const down = e => { e.preventDefault(); send({t:'btn', k, down:true}); };
-    const up   = e => { e.preventDefault(); send({t:'btn', k, down:false}); };
-    el.addEventListener('touchstart', down, {passive:false});
-    el.addEventListener('touchend', up, {passive:false});
-    el.addEventListener('mousedown', down);
-    el.addEventListener('mouseup', up);
+  bind($('#btnA'),'A'); bind($('#btnB'),'B');
+  function bind(el,k){
+    const dn = e=>{ e.preventDefault(); send({t:'btn',k,down:true});
+      if (navigator.vibrate) navigator.vibrate(12); };
+    const up = e=>{ e.preventDefault(); send({t:'btn',k,down:false}); };
+    el.addEventListener('touchstart',dn,{passive:false});
+    el.addEventListener('touchend',up,{passive:false});
+    el.addEventListener('mousedown',dn); el.addEventListener('mouseup',up);
   }
-
-  async function keepAwake(){
-    try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch(e){}
-  }
+  async function keepAwake(){ try{ if('wakeLock' in navigator) await navigator.wakeLock.request('screen'); }catch(e){} }
 }
 </script>
 </body>
