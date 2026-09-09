@@ -124,6 +124,15 @@ kbd{font-family:'IBM Plex Mono',monospace;background:rgba(237,235,228,.1);paddin
 const P = new URLSearchParams(location.search);
 const PREFIX = 'smcln-wii-';
 const $ = s => document.querySelector(s);
+
+// 서로 다른 네트워크(유선 랜 ↔ LTE)에서도 붙도록 TURN 중계를 함께 등록
+const ICE = { iceServers: [
+  {urls:'stun:stun.l.google.com:19302'},
+  {urls:'stun:stun1.l.google.com:19302'},
+  {urls:'turn:openrelay.metered.ca:80',  username:'openrelayproject', credential:'openrelayproject'},
+  {urls:'turn:openrelay.metered.ca:443', username:'openrelayproject', credential:'openrelayproject'},
+  {urls:'turn:openrelay.metered.ca:443?transport=tcp', username:'openrelayproject', credential:'openrelayproject'},
+]};
 const role = P.get('role');
 if (role === 'pc') startPC();
 else if (role === 'remote') startRemote();
@@ -640,8 +649,20 @@ function startPC(){
   /* ---------- 연결 ---------- */
   let conn = null;
   function sendPad(mode){ if (conn && conn.open) conn.send({t:'pad', mode}); }
-  const peer = new Peer(PREFIX+code, {debug:0});
-  peer.on('error', ()=>{ $('#state').textContent='연결 오류 — 새로고침하세요'; });
+  const peer = new Peer(PREFIX+code, {debug:0, config:ICE});
+  peer.on('open', ()=>{ $('#state').textContent='컨트롤러 기다리는 중'; });
+  peer.on('error', e=>{
+    const map = {
+      'unavailable-id':'같은 코드의 화면이 이미 열려 있습니다. 다른 창을 닫으세요.',
+      'network':'중계 서버에 연결하지 못했습니다. 방화벽을 확인하세요.',
+      'browser-incompatible':'이 브라우저는 지원하지 않습니다. 크롬을 쓰세요.',
+      'server-error':'중계 서버 오류. 잠시 후 새로고침하세요.',
+    };
+    $('#state').textContent = map[e.type] || ('연결 오류 · ' + e.type);
+    $('#panel').style.display = 'block';
+  });
+  if (location.protocol === 'file:')
+    $('#state').textContent = '파일을 직접 열면 연결되지 않습니다. 웹 주소로 여세요.';
   peer.on('connection', c => {
     if (conn && conn.open) conn.close();
     conn = c;
@@ -709,7 +730,7 @@ function startRemote(){
 
   function connect(code){
     $('#rerr').textContent='연결하는 중…';
-    const peer = new Peer({debug:0});
+    const peer = new Peer({debug:0, config:ICE});
     peer.on('open', ()=>{
       conn = peer.connect(PREFIX+code, {reliable:false});
       conn.on('open', ()=>{
@@ -724,8 +745,12 @@ function startRemote(){
       conn.on('error', ()=>{ $('#rerr').textContent='연결 실패. 코드를 확인하세요.'; });
     });
     peer.on('error', e=>{
-      $('#rerr').textContent = (e.type==='peer-unavailable')
-        ? '해당 코드의 화면을 찾을 수 없습니다.' : '연결 오류가 발생했습니다.';
+      const map = {
+        'peer-unavailable':'해당 코드의 화면을 찾을 수 없습니다. 코드를 확인하세요.',
+        'network':'중계 서버에 연결하지 못했습니다. 데이터를 켜고 다시 시도하세요.',
+        'browser-incompatible':'이 브라우저는 지원하지 않습니다. 크롬이나 사파리를 쓰세요.',
+      };
+      $('#rerr').textContent = map[e.type] || ('연결 오류 · ' + e.type);
     });
   }
   function startSensors(){
