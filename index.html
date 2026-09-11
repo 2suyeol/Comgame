@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>모션게임 · 세미콜론</title>
+<title>과일 자르기 · 세미콜론</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&display=swap">
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
@@ -91,7 +91,7 @@ kbd{font-family:'IBM Plex Mono',monospace;background:rgba(237,235,228,.1);paddin
 
 <section id="pick">
   <div class="box">
-    <h1>모션 게임</h1>
+    <h1>과일 자르기</h1>
     <p>폰을 컨트롤러로, 큰 화면을 게임 화면으로 씁니다.<br>기기마다 아래에서 역할을 고르세요.</p>
     <button class="role" data-role="pc"><b>이 기기를 게임 화면으로</b><span>노트북·모니터에서 선택. 방 코드가 나옵니다.</span></button>
     <button class="role" data-role="remote"><b>이 기기를 컨트롤러로</b><span>폰에서 선택. 방 코드를 입력해 연결합니다.</span></button>
@@ -305,12 +305,13 @@ function startPC(){
       score:0, level:1, combo:0, comboT:0,
       items:[], bits:[], spark:[], spawnT:0.6,
       banner:'', bannerSub:'', bannerT:0, gained:0,
+      rushOn:false, popText:'', popT:0, popColor:'#EDEBE4',
 
       // 단계가 오를수록 1에 천천히 접근하는 난이도 계수 — 상한이 없다
       dp(){ return 1 - Math.pow(0.85, this.level-1); },
 
       update(dt){
-        this.time -= dt; this.bannerT -= dt; this.barFlash -= dt;
+        this.time -= dt; this.bannerT -= dt; this.barFlash -= dt; this.popT -= dt;
         if (this.time<=0){ this.time=0; endGame('time'); return; }
         this.comboT -= dt; if (this.comboT<=0) this.combo=0;
 
@@ -331,13 +332,22 @@ function startPC(){
 
         const p = this.dp();
 
+        // 남은 시간 10초부터는 피버타임 — 과일이 쏟아지고 폭탄은 줄어든다
+        const rush = this.time <= 10;
+        if (rush && !this.rushOn){
+          this.rushOn = true;
+          this.banner = '피버타임'; this.bannerSub = '과일이 쏟아집니다'; this.bannerT = 1.6;
+          blip(520, .12, 'square', .18);
+        } else if (!rush && this.rushOn) this.rushOn = false;
+
         this.spawnT -= dt;
         if (this.spawnT<=0){
-          this.spawnT = Math.max(0.16, rand(0.6,1.0)*(1 - 0.62*p));
+          this.spawnT = Math.max(0.10, rand(0.6,1.0)*(1 - 0.62*p)*(rush ? 0.45 : 1));
           let n = 1;
           if (Math.random() < 0.15 + p*0.55) n++;
           if (this.level >= 5 && Math.random() < p*0.5) n++;
-          for(let i=0;i<n;i++) this.spawn(p);
+          if (rush) n++;
+          for(let i=0;i<n;i++) this.spawn(p, rush);
         }
 
         const G    = 720 + 380*p;          // 중력 — 셀수록 화면에 머무는 시간이 짧다
@@ -363,14 +373,21 @@ function startPC(){
         this.spark = this.spark.filter(s=>!s.dead);
       },
 
-      spawn(p){
-        const bomb = Math.random() < 0.06 + p*0.17;
+      spawn(p, rush){
+        const bomb = Math.random() < (0.06 + p*0.17) * (rush ? 0.35 : 1);
         const kind = bomb ? {c:'#22262A', in:'#3A4148', r:30} : FR[Math.floor(Math.random()*FR.length)];
+        // 선을 따라 정확히 잘라야 하는 과일
+        const guided = !bomb && Math.random() < 0.10 + p*0.10;
         const x = rand(W*0.12, W*0.88);
         this.items.push({
-          x, y:H+60, r:kind.r*(1 - 0.28*p), c:kind.c, inc:kind.in, bomb,
-          vx:(W/2-x)*rand(0.25,0.55)*(1+0.6*p), vy:-rand(660,780)-p*240,
-          rot:0, spin:rand(-3,3)*(1+p), cut:false, dead:false
+          x, y:H+60,
+          r: kind.r*(1 - 0.28*p) * (guided ? 1.2 : 1),
+          c:kind.c, inc:kind.in, bomb, guided,
+          line: guided ? rand(0, Math.PI) : 0,
+          vx:(W/2-x)*rand(0.25,0.55)*(1+0.6*p)*(guided ? 0.6 : 1),
+          vy: guided ? -rand(780,880) : -rand(660,780)-p*240,
+          rot:0, spin: guided ? rand(-0.5,0.5) : rand(-3,3)*(1+p),
+          cut:false, dead:false
         });
       },
 
@@ -393,9 +410,25 @@ function startPC(){
           else this.score = Math.max(0, this.score - 10);
         } else {
           this.combo++; this.comboT = 0.55;
-          this.score += 10 * Math.min(this.combo, 6);
+          const base = 10 * Math.min(this.combo, 6);
+          if (f.guided){
+            // 스윙 각도와 표시선의 차이 — 선은 방향이 없으므로 90도 안으로 접는다
+            const norm = a => ((a % Math.PI) + Math.PI) % Math.PI;
+            let d = Math.abs(norm(ang) - norm(f.line + f.rot));
+            if (d > Math.PI/2) d = Math.PI - d;
+            if (d < 0.42){
+              const gain = base*3 + 50;
+              this.score += gain;
+              this.pop('정확  +' + gain, '#FFD34A');
+              blip(980, .12, 'triangle', .22);
+            } else {
+              this.score += base;
+              this.pop('각도가 어긋났습니다', 'rgba(237,235,228,.8)');
+            }
+          } else this.score += base;
         }
       },
+      pop(text, color){ this.popText = text; this.popColor = color; this.popT = 0.9; },
 
       draw(){
         const g = ctx.createLinearGradient(0,0,0,H);
@@ -425,6 +458,18 @@ function startPC(){
         mono(Math.ceil(this.maxTime)+'초 중', 10, 24, 11, 'rgba(237,235,228,.3)', 'left');
 
         hud(this);
+        if (this.rushOn){
+          ctx.fillStyle='rgba(240,74,50,.07)'; ctx.fillRect(0,0,W,H);
+          const a = 0.35 + Math.sin(performance.now()/160)*0.2;
+          ctx.strokeStyle='rgba(240,74,50,'+a.toFixed(2)+')'; ctx.lineWidth=8;
+          ctx.strokeRect(4,4,W-8,H-8);
+          txt('피버타임', W/2, 46, 22, 'rgba(240,74,50,.9)', 700);
+        }
+        if (this.popT>0){
+          ctx.globalAlpha = clamp(this.popT*1.6, 0, 1);
+          txt(this.popText, cur.x, cur.y-72, 24, this.popColor, 700);
+          ctx.globalAlpha = 1;
+        }
         if (this.combo>1) txt(this.combo+' 연속', cur.x, cur.y-44, 22, 'rgba(227,155,106,.95)', 700);
         if (this.level >= LETHAL_LV)
           txt('폭탄을 자르면 즉시 종료', 34, 80, 13, 'rgba(240,74,50,.9)', 600, 'left');
@@ -474,6 +519,18 @@ function startPC(){
       ctx.fillStyle=f.c; ctx.beginPath(); ctx.arc(0,0,f.r,0,7); ctx.fill();
       ctx.fillStyle='rgba(255,255,255,.22)';
       ctx.beginPath(); ctx.ellipse(-f.r*0.32,-f.r*0.36,f.r*0.3,f.r*0.2,-0.6,0,7); ctx.fill();
+      if (f.guided){
+        ctx.strokeStyle='#FFD34A'; ctx.lineWidth=3;
+        ctx.beginPath(); ctx.arc(0,0,f.r+7,0,7); ctx.stroke();
+        ctx.save(); ctx.rotate(f.line);
+        const L = f.r + 20;
+        ctx.setLineDash([9,7]); ctx.lineWidth=4; ctx.strokeStyle='#FFF6DA'; ctx.lineCap='round';
+        ctx.beginPath(); ctx.moveTo(-L,0); ctx.lineTo(L,0); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle='#FFD34A';
+        [-1,1].forEach(s=>{ ctx.beginPath(); ctx.arc(s*L,0,4.5,0,7); ctx.fill(); });
+        ctx.restore();
+      }
     }
     ctx.restore();
   }
@@ -574,9 +631,10 @@ function startPC(){
     ctx.beginPath(); ctx.arc(W/2, H*0.30, 22, 0, 7); ctx.fill();
     txt('과일 자르기', W/2, H*0.30+58, 34, '#EDEBE4', 700);
     txt('폰을 빠르게 휘둘러 과일을 자르세요', W/2, H*0.30+100, 17, 'rgba(237,235,228,.6)', 500);
-    txt('점수를 채우면 다음 단계로 넘어가고 남은 시간이 늘어납니다', W/2, H*0.30+128, 17, 'rgba(237,235,228,.6)', 500);
-    txt('3단계부터는 폭탄을 자르면 그 자리에서 끝납니다', W/2, H*0.30+156, 17, 'rgba(240,74,50,.85)', 600);
-    mono(String(Math.ceil(ready)), W/2, H*0.76, 76, '#E39B6A');
+    txt('노란 선이 있는 과일은 선을 따라 잘라야 큰 점수를 줍니다', W/2, H*0.30+128, 17, 'rgba(255,211,74,.9)', 600);
+    txt('점수를 채우면 다음 단계로 넘어가고 남은 시간이 늘어납니다', W/2, H*0.30+156, 17, 'rgba(237,235,228,.6)', 500);
+    txt('3단계부터는 폭탄을 자르면 그 자리에서 끝납니다', W/2, H*0.30+184, 17, 'rgba(240,74,50,.85)', 600);
+    mono(String(Math.ceil(ready)), W/2, H*0.78, 76, '#E39B6A');
     txt('A를 누르면 바로 시작', W/2, H-56, 14, 'rgba(237,235,228,.35)', 500);
   }
 
